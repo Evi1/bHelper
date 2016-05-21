@@ -17,7 +17,7 @@ var cPath string
 var l1 *list.List
 
 func main(){
-	bPath = "./tv.danmaku.bili.old/download/"
+	bPath = "./tv.danmaku.bili/download/"
 	cPath = bPath
 	files, _ := ioutil.ReadDir(filepath.FromSlash(cPath))
 	l1 = list.New()
