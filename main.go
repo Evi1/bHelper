@@ -68,8 +68,10 @@ func handle(f os.FileInfo)  {
 		}else if strings.HasSuffix(f.Name(),".json"){
 			title,part=handleJSON(path+f.Name())
 			//fmt.Println(title+" --- "+part)
+		}else if strings.HasSuffix(f.Name(),".mp4"{
+			v = f.Name()
+			inPath=""
 		}
-
 	}
 	copyVideo(title,part,path,inPath,v)
 }
