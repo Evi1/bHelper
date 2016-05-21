@@ -8,7 +8,7 @@ import (
 	"strings"
 	"github.com/bitly/go-simplejson"
 	"bufio"
-	"syscall"
+	//"syscall"
 	"path/filepath"
 )
 
@@ -68,7 +68,7 @@ func handle(f os.FileInfo)  {
 		}else if strings.HasSuffix(f.Name(),".json"){
 			title,part=handleJSON(path+f.Name())
 			//fmt.Println(title+" --- "+part)
-		}else if strings.HasSuffix(f.Name(),".mp4"{
+		}else if strings.HasSuffix(f.Name(),".mp4"){
 			v = f.Name()
 			inPath=""
 		}
@@ -97,9 +97,9 @@ func handleJSON(filename string) (string, string)  {
 func copyVideo(title string, part string,path string,inPath string, v string){
 	inputFile := path+inPath+v;
 	outputFile := "./bilibili/"+title+"/"+part+".mp4"
-	oldMask := syscall.Umask(0)
+	//oldMask := syscall.Umask(0)
 	os.MkdirAll(filepath.FromSlash("./bilibili/"+title+"/"),os.ModePerm)
-	syscall.Umask(oldMask)
+	//syscall.Umask(oldMask)
 	fmt.Println(inputFile+"------>"+outputFile)
 	buf, err := ioutil.ReadFile(filepath.FromSlash(inputFile))
 	if err != nil {
