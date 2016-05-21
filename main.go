@@ -56,7 +56,7 @@ func main(){
 	//time.Sleep(1000 * time.Millisecond)
 	for i:=0;i<num;i++{
 		<-routineNum
-		fmt.Println("routineNum-1")
+		//fmt.Println("routineNum-1")
 	}
 }
 
@@ -86,9 +86,9 @@ func handle(cPath string,f os.FileInfo)  {
 	}
 	copyVideo(title,part,path,inPath,v)
 	<-routineLimit
-	fmt.Println("routineLimit-1")
+	//fmt.Println("routineLimit-1")
 	routineNum<- 1
-	fmt.Println("routineNum+1")
+	//fmt.Println("routineNum+1")
 }
 
 func handleJSON(filename string) (string, string)  {
@@ -115,7 +115,7 @@ func copyVideo(title string, part string,path string,inPath string, v string){
 	//oldMask := syscall.Umask(0)
 	os.MkdirAll(filepath.FromSlash("./bilibili/"+title+"/"),os.ModePerm)
 	//syscall.Umask(oldMask)
-	//fmt.Println(inputFile+"  ------>  "+outputFile)
+	fmt.Println(inputFile+"  ------>  "+outputFile)
 	buf, err := ioutil.ReadFile(filepath.FromSlash(inputFile))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "File Error: %s\n", err)
