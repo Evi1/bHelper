@@ -6,8 +6,8 @@ import (
 )
 
 type config struct {
-	From string
-	To string
+	From  string
+	To    string
 	Limit int
 }
 
@@ -23,7 +23,7 @@ func init() {
 		panic("error")
 	}
 	C.From = js.Get("from").MustString()
-	C.To=js.Get("to").MustString()
-	C.Limit=js.Get("routineLimit").MustInt()
+	C.To = js.Get("to").MustString()
+	C.Limit = js.Get("routineLimit").MustInt()
 }
 
