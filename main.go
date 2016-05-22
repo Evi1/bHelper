@@ -8,9 +8,8 @@ import (
 	"strings"
 	"github.com/bitly/go-simplejson"
 	"bufio"
-	//"syscall"
 	"path/filepath"
-	//"time"
+	"github.com/Evi1/bHelper/config"
 )
 
 //var bPath string
@@ -22,11 +21,11 @@ var routineLimit chan int
 
 func init() {
 	routineNum=make(chan int)
-	routineLimit=make(chan int, 4)
+	routineLimit=make(chan int, config.C.Limit)
 }
 
 func main(){
-	bPath := "./tv.danmaku.bili/download/"
+	bPath := config.C.From+"tv.danmaku.bili/download/"
 	cPath := bPath
 	files, _ := ioutil.ReadDir(filepath.FromSlash(cPath))
 	l1 := list.New()
@@ -47,7 +46,7 @@ func main(){
 				num++
 				//fmt.Println("start"+cPath+f.Name())
 				routineLimit <- 1
-				fmt.Println("routineLimit+1")
+				//fmt.Println("routineLimit+1")
 				go handle(cPath,f)
 				//time.Sleep(time.Second)
 			}
@@ -64,10 +63,10 @@ func handle(cPath string,f os.FileInfo)  {
 	path := cPath +f.Name() + "/"
 	//fmt.Println(path)
 	files, _ := ioutil.ReadDir(filepath.FromSlash(path))
-	var title string
-	var part string
-	var v string
-	var inPath string
+	title:=""
+	part:=""
+	v:=""
+	inPath:=""
 	for _, f := range files {
 		if f.IsDir(){
 			videos,_:= ioutil.ReadDir(filepath.FromSlash(path+f.Name()+"/"))
@@ -84,7 +83,9 @@ func handle(cPath string,f os.FileInfo)  {
 			inPath=""
 		}
 	}
-	copyVideo(title,part,path,inPath,v)
+	if v != ""{
+		copyVideo(title,part,path,inPath,v)
+	}
 	<-routineLimit
 	//fmt.Println("routineLimit-1")
 	routineNum<- 1
@@ -111,19 +112,25 @@ func handleJSON(filename string) (string, string)  {
 
 func copyVideo(title string, part string,path string,inPath string, v string){
 	inputFile := path+inPath+v;
-	outputFile := "./bilibili/"+title+"/"+part+".mp4"
+	outputFile := config.C.To+title+"/"+part+".mp4"
 	//oldMask := syscall.Umask(0)
-	os.MkdirAll(filepath.FromSlash("./bilibili/"+title+"/"),os.ModePerm)
+	err:=os.MkdirAll(filepath.FromSlash(config.C.To+title+"/"),os.ModePerm)
+	if err != nil {
+		fmt.Println("mkdir error"+config.C.To+title+"/")
+		return
+		// panic(err.Error())
+	}
 	//syscall.Umask(oldMask)
 	fmt.Println(inputFile+"  ------>  "+outputFile)
 	buf, err := ioutil.ReadFile(filepath.FromSlash(inputFile))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "File Error: %s\n", err)
+		fmt.Println("An error occurred with read:"+v)
+		return
 		// panic(err.Error())
 	}
 	out,err:=os.OpenFile(outputFile,os.O_WRONLY|os.O_CREATE,0666)
 	if err!=nil{
-		fmt.Printf("An error occurred with file opening or creation\n")
+		fmt.Println("An error occurred with file opening or creation:"+part+".mp4")
 		return
 	}
 	defer out.Close()
