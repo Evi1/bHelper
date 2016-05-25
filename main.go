@@ -12,10 +12,6 @@ import (
 	"github.com/Evi1/bHelper/config"
 )
 
-//var bPath string
-//var cPath string
-//var l1 *list.List
-
 var routineNum chan int
 var routineLimit chan int
 
@@ -26,7 +22,6 @@ func init() {
 
 func main() {
 	bPath := config.C.From + "tv.danmaku.bili/download/"
-	fmt.Println(bPath+config.C.From+config.C.To)
 	cPath := bPath
 	files, _ := ioutil.ReadDir(filepath.FromSlash(cPath))
 	l1 := list.New()
@@ -45,24 +40,18 @@ func main() {
 		for _, f := range files {
 			if f.IsDir() {
 				num++
-				//fmt.Println("start"+cPath+f.Name())
 				routineLimit <- 1
-				//fmt.Println("routineLimit+1")
 				go handle(cPath, f)
-				//time.Sleep(time.Second)
 			}
 		}
 	}
-	//time.Sleep(1000 * time.Millisecond)
 	for i := 0; i < num; i++ {
 		<-routineNum
-		//fmt.Println("routineNum-1")
 	}
 }
 
 func handle(cPath string, f os.FileInfo) {
 	path := cPath + f.Name() + "/"
-	//fmt.Println(path)
 	files, _ := ioutil.ReadDir(filepath.FromSlash(path))
 	title := ""
 	part := ""
@@ -88,9 +77,7 @@ func handle(cPath string, f os.FileInfo) {
 		copyVideo(title, part, path, inPath, v)
 	}
 	<-routineLimit
-	//fmt.Println("routineLimit-1")
 	routineNum <- 1
-	//fmt.Println("routineNum+1")
 }
 
 func handleJSON(filename string) (string, string) {
@@ -119,7 +106,6 @@ func copyVideo(title string, part string, path string, inPath string, v string) 
 	if err != nil {
 		fmt.Println("mkdir error" + config.C.To + title + "/")
 		return
-		// panic(err.Error())
 	}
 	//syscall.Umask(oldMask)
 	fmt.Println(inputFile + "  ------>  " + outputFile)
