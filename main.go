@@ -26,6 +26,7 @@ func init() {
 
 func main() {
 	bPath := config.C.From + "tv.danmaku.bili/download/"
+	fmt.Println(bPath+config.C.From+config.C.To)
 	cPath := bPath
 	files, _ := ioutil.ReadDir(filepath.FromSlash(cPath))
 	l1 := list.New()
