@@ -100,6 +100,9 @@ func handleJSON(filename string) (string, string) {
 
 func copyVideo(title string, part string, path string, inPath string, v string) {
 	inputFile := path + inPath + v;
+	if len(part)<=1{
+		part = "0" + part
+	}
 	outputFile := config.C.To + title + "/" + part + ".mp4"
 	//oldMask := syscall.Umask(0)
 	err := os.MkdirAll(filepath.FromSlash(config.C.To + title + "/"), os.ModePerm)
