@@ -100,6 +100,7 @@ func handleJSON(filename string) (string, string) {
 
 func copyVideo(title string, part string, path string, inPath string, v string) {
 	inputFile := path + inPath + v;
+	part = strings.TrimSpace(part)
 	if len(part)<=1{
 		part = "0" + part
 	}
