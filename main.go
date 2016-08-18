@@ -159,20 +159,4 @@ func copyVideo(title string, part string, path string, inPath string, v string) 
 		}
 		outputWriter.Flush()
 	}
-
-	/*buf, err := ioutil.ReadFile(filepath.FromSlash(inputFile))
-	if err != nil {
-		log.Println("An error occurred with read:" + v)
-		return
-		// panic(err.Error())
-	}
-	out, err := os.OpenFile(outputFile, os.O_WRONLY | os.O_CREATE, 0666)
-	if err != nil {
-		log.Println("An error occurred with file opening or creation:" + part + ".mp4")
-		return
-	}
-	defer out.Close()
-	outputWriter := bufio.NewWriter(out)
-	outputWriter.Write(buf)
-	outputWriter.Flush()*/
 }
