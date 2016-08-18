@@ -13,6 +13,7 @@ type config struct {
 	From  string
 	To    string
 	Limit int
+	Buf  int
 }
 
 var C config
@@ -27,7 +28,7 @@ func init() {
 		}
 		defer out.Close()
 		outputWriter := bufio.NewWriter(out)
-		outputWriter.WriteString("{\"from\": \"./\",\"to\": \"./bilibili/\",\"routineLimit\": 4}")
+		outputWriter.WriteString("{\"from\": \"./\",\"to\": \"./bilibili/\",\"routineLimit\": 4,\"buf\":0}")
 		outputWriter.Flush()
 		C.From = "./"
 		C.To = "./bilibili/"
@@ -41,5 +42,6 @@ func init() {
 	C.From = js.Get("from").MustString()
 	C.To = js.Get("to").MustString()
 	C.Limit = js.Get("routineLimit").MustInt()
+	C.Buf = js.Get("buf").MustInt()
 }
 

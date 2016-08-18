@@ -2,7 +2,7 @@ package main
 
 import (
 	"io/ioutil"
-	"fmt"
+	"log"
 	"container/list"
 	"os"
 	"strings"
@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"path/filepath"
 	"github.com/Evi1/bHelper/config"
+	"io"
 )
 
 var routineNum chan int
@@ -101,31 +102,77 @@ func handleJSON(filename string) (string, string) {
 func copyVideo(title string, part string, path string, inPath string, v string) {
 	inputFile := path + inPath + v;
 	part = strings.TrimSpace(part)
-	if len(part)<=1{
+	if len(part) <= 1 {
 		part = "0" + part
 	}
 	outputFile := config.C.To + title + "/" + part + ".mp4"
 	//oldMask := syscall.Umask(0)
 	err := os.MkdirAll(filepath.FromSlash(config.C.To + title + "/"), os.ModePerm)
 	if err != nil {
-		fmt.Println("mkdir error" + config.C.To + title + "/")
+		log.Println("mkdir error" + config.C.To + title + "/")
 		return
 	}
 	//syscall.Umask(oldMask)
-	fmt.Println(inputFile + "  ------>  " + outputFile)
-	buf, err := ioutil.ReadFile(filepath.FromSlash(inputFile))
+	log.Println(inputFile + "  ------>  " + outputFile)
+	if config.C.Buf <= 0 {
+		buf, err := ioutil.ReadFile(filepath.FromSlash(inputFile))
+		if err != nil {
+			log.Println("An error occurred with read:" + v)
+			return
+			// panic(err.Error())
+		}
+		out, err := os.OpenFile(outputFile, os.O_WRONLY | os.O_CREATE, 0666)
+		if err != nil {
+			log.Println("An error occurred with file opening or creation:" + part + ".mp4")
+			return
+		}
+		defer out.Close()
+		outputWriter := bufio.NewWriter(out)
+		outputWriter.Write(buf)
+		outputWriter.Flush()
+	} else {
+		in, err := os.OpenFile(inputFile, os.O_RDONLY, 0666)
+		if err != nil {
+			log.Println("An error occurred with file opening:" + part + ".mp4")
+			return
+		}
+		defer in.Close()
+		out, err := os.OpenFile(outputFile, os.O_WRONLY | os.O_CREATE, 0666)
+		if err != nil {
+			log.Println("An error occurred with file opening or creation:" + part + ".mp4")
+			return
+		}
+		defer out.Close()
+		buf := make([]byte, config.C.Buf) //一次读取多少个字节
+		bfRd := bufio.NewReader(in)
+		outputWriter := bufio.NewWriter(out)
+		for {
+			n, err := bfRd.Read(buf)
+			outputWriter.Write(buf[:n]) // n 是成功读取字节数
+			if err != nil {
+				//遇到任何错误立即返回，并忽略 EOF 错误信息
+				if err == io.EOF {
+					break
+				}
+				log.Println(err)
+			}
+		}
+		outputWriter.Flush()
+	}
+
+	/*buf, err := ioutil.ReadFile(filepath.FromSlash(inputFile))
 	if err != nil {
-		fmt.Println("An error occurred with read:" + v)
+		log.Println("An error occurred with read:" + v)
 		return
 		// panic(err.Error())
 	}
 	out, err := os.OpenFile(outputFile, os.O_WRONLY | os.O_CREATE, 0666)
 	if err != nil {
-		fmt.Println("An error occurred with file opening or creation:" + part + ".mp4")
+		log.Println("An error occurred with file opening or creation:" + part + ".mp4")
 		return
 	}
 	defer out.Close()
 	outputWriter := bufio.NewWriter(out)
 	outputWriter.Write(buf)
-	outputWriter.Flush()
+	outputWriter.Flush()*/
 }
