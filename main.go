@@ -100,12 +100,17 @@ func handleJSON(filename string) (string, string) {
 }
 
 func copyVideo(title string, part string, path string, inPath string, v string) {
-	inputFile := path + inPath + v;
+	inputFile := filepath.FromSlash(path + inPath + v);
 	part = strings.TrimSpace(part)
 	if len(part) <= 1 {
 		part = "0" + part
 	}
-	outputFile := config.C.To + title + "/" + part + ".mp4"
+	outputFile := filepath.FromSlash(config.C.To + title + "/") + part + ".mp4"
+	if _, err := os.Stat(outputFile); err == nil {
+		// path/to/whatever exists
+		log.Println(outputFile + "file exitsts !")
+		return
+	}
 	//oldMask := syscall.Umask(0)
 	err := os.MkdirAll(filepath.FromSlash(config.C.To + title + "/"), os.ModePerm)
 	if err != nil {
@@ -113,9 +118,10 @@ func copyVideo(title string, part string, path string, inPath string, v string) 
 		return
 	}
 	//syscall.Umask(oldMask)
+	//log.Println(inputFile + "  ------>  " + outputFile)
 	log.Println(inputFile + "  ------>  " + outputFile)
 	if config.C.Buf <= 0 {
-		buf, err := ioutil.ReadFile(filepath.FromSlash(inputFile))
+		buf, err := ioutil.ReadFile(inputFile)
 		if err != nil {
 			log.Println("An error occurred with read:" + v)
 			return
