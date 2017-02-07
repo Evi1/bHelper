@@ -93,7 +93,6 @@ func handle(cPath string, f os.FileInfo) {
 			isV = true
 		}
 	}
-	//log.Println(title, part, path, inPath, v, thisTitle)
 	if isV&&isM {
 		copyVideo(title, part, path, inPath, v, thisTitle)
 	}
@@ -147,14 +146,12 @@ func copyVideo(title, part, path, inPath, v, thisTitle string) {
 		return
 	}
 	syscall.Umask(oldMask)
-	//log.Println(inputFile + "  ------>  " + outputFile)
 	log.Println(inputFile + "  ------>  " + outputFile)
 	if config.C.Buf <= 0 {
 		buf, err := ioutil.ReadFile(inputFile)
 		if err != nil {
 			log.Println("An error occurred with read:" + v)
 			return
-			// panic(err.Error())
 		}
 		out, err := os.OpenFile(outputFile, os.O_WRONLY | os.O_CREATE, 0666)
 		if err != nil {

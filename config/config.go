@@ -43,6 +43,5 @@ func init() {
 	C.To = filepath.ToSlash(js.Get("to").MustString())
 	C.Limit = js.Get("routineLimit").MustInt()
 	C.Buf = js.Get("buf").MustInt()
-	//log.Println(C.From,C.To)
 }
 
