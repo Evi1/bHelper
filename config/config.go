@@ -19,9 +19,9 @@ type config struct {
 var C config
 
 func init() {
-	bytes, err := ioutil.ReadFile(filepath.FromSlash("./config.json"))
+	bytes, err := ioutil.ReadFile("./config.json")
 	if err != nil {
-		out, err := os.OpenFile(filepath.FromSlash("./config.json"), os.O_WRONLY | os.O_CREATE, 0666)
+		out, err := os.OpenFile("./config.json", os.O_WRONLY | os.O_CREATE, 0666)
 		if err != nil {
 			fmt.Println("An error occurred with file opening or creation:config.json")
 			return
@@ -39,9 +39,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	C.From = js.Get("from").MustString()
-	C.To = js.Get("to").MustString()
+	C.From = filepath.ToSlash(js.Get("from").MustString())
+	C.To = filepath.ToSlash(js.Get("to").MustString())
 	C.Limit = js.Get("routineLimit").MustInt()
 	C.Buf = js.Get("buf").MustInt()
+	//log.Println(C.From,C.To)
 }
 

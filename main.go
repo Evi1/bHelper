@@ -8,9 +8,10 @@ import (
 	"strings"
 	"github.com/bitly/go-simplejson"
 	"bufio"
-	"path/filepath"
 	"github.com/Evi1/bHelper/config"
 	"io"
+	"syscall"
+	"github.com/Evi1/bHelper/tools"
 )
 
 var routineNum chan int
@@ -24,7 +25,7 @@ func init() {
 func main() {
 	bPath := config.C.From + "tv.danmaku.bili/download/"
 	cPath := bPath
-	files, _ := ioutil.ReadDir(filepath.FromSlash(cPath))
+	files, _ := ioutil.ReadDir(cPath)
 	l1 := list.New()
 	for _, f := range files {
 		if f.IsDir() {
@@ -53,71 +54,99 @@ func main() {
 
 func handle(cPath string, f os.FileInfo) {
 	path := cPath + f.Name() + "/"
-	files, _ := ioutil.ReadDir(filepath.FromSlash(path))
-	title := ""
-	part := ""
-	v := ""
-	inPath := ""
+	files, _ := ioutil.ReadDir(path)
+	title := ""; part := ""; v := ""; thisTitle := ""; inPath := ""
+	isV := false; isM := false
 	for _, f := range files {
+		if isV&&isM {
+			break;
+		}
 		if f.IsDir() {
-			videos, _ := ioutil.ReadDir(filepath.FromSlash(path + f.Name() + "/"))
+			videos, _ := ioutil.ReadDir(path + f.Name() + "/")
+			l,r:=tools.CheckFLV(videos)
+			if r{
+				tools.MakeMp4(l,path + f.Name() + "/")
+				videos, _ = ioutil.ReadDir(path + f.Name() + "/")
+			}
+
 			for _, video := range videos {
 				if strings.HasSuffix(video.Name(), ".mp4") {
 					v = video.Name()
 					inPath = f.Name() + "/"
+					isV = true
+					break
 				}
 			}
 		} else if strings.HasSuffix(f.Name(), ".json") {
-			title, part = handleJSON(path + f.Name())
+			var e error
+			title, part, thisTitle, e = handleJSON(path + f.Name())
+			if e != nil {
+				log.Println("An error occurred with json file:" + f.Name() + " : " + e.Error())
+				<-routineLimit
+				routineNum <- 1
+				return
+			}
+			isM = true;
 		} else if strings.HasSuffix(f.Name(), ".mp4") {
 			v = f.Name()
 			inPath = ""
+			isV = true
 		}
 	}
-	if v != "" {
-		copyVideo(title, part, path, inPath, v)
+	//log.Println(title, part, path, inPath, v, thisTitle)
+	if isV&&isM {
+		copyVideo(title, part, path, inPath, v, thisTitle)
 	}
 	<-routineLimit
 	routineNum <- 1
 }
 
-func handleJSON(filename string) (string, string) {
-	data, err := ioutil.ReadFile(filepath.FromSlash(filename))
+func handleJSON(filename string) (title, part, thisTitle string, e error) {
+	title = ""; part = ""; thisTitle = ""
+	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return "", ""
+		e = err
+		return
 	}
 	datajson := []byte(data)
 	js, err := simplejson.NewJson(datajson)
 	if err != nil {
-		return "", ""
+		e = err
+		return
 	}
-	title := js.Get("title").MustString()
-	part := js.Get("page_data").Get("part").MustString()
+	title = js.Get("title").MustString("")
+	part = js.Get("page_data").Get("part").MustString("")
 	if part == "" {
-		part = js.Get("ep").Get("index").MustString()
+		part = js.Get("ep").Get("index").MustString("")
+		thisTitle = js.Get("ep").Get("index_title").MustString("")
 	}
-	return title, part
+	return
 }
 
-func copyVideo(title string, part string, path string, inPath string, v string) {
-	inputFile := filepath.FromSlash(path + inPath + v);
+func copyVideo(title, part, path, inPath, v, thisTitle string) {
+	inputFile := path + inPath + v;
 	part = strings.TrimSpace(part)
 	if len(part) <= 1 {
 		part = "0" + part
 	}
-	outputFile := filepath.FromSlash(config.C.To + title + "/") + part + ".mp4"
+	outputFile := ""
+	if len(thisTitle)>0{
+		outputFile = config.C.To + title + "/" + part + "-" + thisTitle + ".mp4"
+	}else{
+		outputFile = config.C.To + title + "/" + part + ".mp4"
+	}
 	if _, err := os.Stat(outputFile); err == nil {
 		// path/to/whatever exists
-		log.Println(outputFile + "file exitsts !")
+		log.Println(outputFile + " file exitsts !")
 		return
 	}
-	//oldMask := syscall.Umask(0)
-	err := os.MkdirAll(filepath.FromSlash(config.C.To + title + "/"), os.ModePerm)
+	oldMask := syscall.Umask(0)
+	err := os.MkdirAll(config.C.To + title + "/", os.ModePerm)
 	if err != nil {
 		log.Println("mkdir error" + config.C.To + title + "/")
 		return
 	}
-	//syscall.Umask(oldMask)
+	syscall.Umask(oldMask)
 	//log.Println(inputFile + "  ------>  " + outputFile)
 	log.Println(inputFile + "  ------>  " + outputFile)
 	if config.C.Buf <= 0 {
@@ -166,3 +195,5 @@ func copyVideo(title string, part string, path string, inPath string, v string) 
 		outputWriter.Flush()
 	}
 }
+
+
