@@ -63,9 +63,9 @@ func handle(cPath string, f os.FileInfo) {
 		}
 		if f.IsDir() {
 			videos, _ := ioutil.ReadDir(path + f.Name() + "/")
-			l,r:=tools.CheckFLV(videos)
-			if r{
-				tools.MakeMp4(l,path + f.Name() + "/")
+			l, r := tools.CheckFLV(videos)
+			if r {
+				tools.MakeMp4(l, path + f.Name() + "/")
 				videos, _ = ioutil.ReadDir(path + f.Name() + "/")
 			}
 
@@ -129,9 +129,9 @@ func copyVideo(title, part, path, inPath, v, thisTitle string) {
 		part = "0" + part
 	}
 	outputFile := ""
-	if len(thisTitle)>0{
+	if len(thisTitle) > 0 {
 		outputFile = config.C.To + title + "/" + part + "-" + thisTitle + ".mp4"
-	}else{
+	} else {
 		outputFile = config.C.To + title + "/" + part + ".mp4"
 	}
 	if _, err := os.Stat(outputFile); err == nil {

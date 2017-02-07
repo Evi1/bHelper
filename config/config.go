@@ -13,7 +13,7 @@ type config struct {
 	From  string
 	To    string
 	Limit int
-	Buf  int
+	Buf   int
 }
 
 var C config
