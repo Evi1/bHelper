@@ -48,7 +48,6 @@ func MakeMp4(l *list.List, p string) {
 		out.WriteString("file '" + p + i.Value.(string) + "'\n")
 	}
 	cmd := exec.Command("ffmpeg", "-f", "concat", "-safe", "0", "-i", p + "file", "-c", "copy", p + "output.mp4")
-	//log.Println("ffmpeg -f concat -safe 0 -i " + p + "file -c copy " + p + "output.mp4")
 	_, e := cmd.CombinedOutput()
 	if e != nil {
 		log.Println(e)
