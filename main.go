@@ -10,7 +10,6 @@ import (
 	"bufio"
 	"github.com/Evi1/bHelper/config"
 	"io"
-	"syscall"
 	"github.com/Evi1/bHelper/tools"
 )
 
