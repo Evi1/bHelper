@@ -139,13 +139,13 @@ func copyVideo(title, part, path, inPath, v, thisTitle string) {
 		log.Println(outputFile + " file exitsts !")
 		return
 	}
-	oldMask := syscall.Umask(0)
+	//oldMask := syscall.Umask(0)
 	err := os.MkdirAll(config.C.To + title + "/", os.ModePerm)
 	if err != nil {
 		log.Println("mkdir error" + config.C.To + title + "/")
 		return
 	}
-	syscall.Umask(oldMask)
+	//syscall.Umask(oldMask)
 	log.Println(inputFile + "  ------>  " + outputFile)
 	if config.C.Buf <= 0 {
 		buf, err := ioutil.ReadFile(inputFile)
