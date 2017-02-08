@@ -28,7 +28,7 @@ func init() {
 		}
 		defer out.Close()
 		outputWriter := bufio.NewWriter(out)
-		outputWriter.WriteString("{\"from\": \"./\",\"to\": \"./bilibili/\",\"routineLimit\": 4,\"buf\":0}")
+		outputWriter.WriteString("{\"from\": \"./\",\"to\": \"./bilibili/\",\"routineLimit\": 1,\"buf\":0}")
 		outputWriter.Flush()
 		C.From = "./"
 		C.To = "./bilibili/"

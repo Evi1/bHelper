@@ -60,6 +60,7 @@ func getNum(n string) (x int) {
 	m := strings.Split(n, ".")[0]
 	x, e = strconv.Atoi(m)
 	if e != nil {
+		x=-1
 		log.Println("An error occurred with vlc file name:" + n + " : " + e.Error())
 	}
 	return
