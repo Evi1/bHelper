@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"log"
 	"os/exec"
+	"runtime"
+	"path/filepath"
 )
 
 func findMin(l *list.List) *list.Element {
@@ -43,14 +45,21 @@ func MakeMp4(l *list.List, p string) {
 		return
 	}
 	defer out.Close()
-	for i := l.Front(); i != nil; i = i.Next() {
-		log.Println("file '" + p + i.Value.(string) + "'\n")
-		out.WriteString("file '" + p + i.Value.(string) + "'\n")
+	pp:=p
+	if runtime.GOOS=="windows"{
+		//log.Println(runtime.GOOS)
+		pp=filepath.FromSlash(p)
 	}
-	cmd := exec.Command("ffmpeg", "-f", "concat", "-safe", "0", "-i", p + "file", "-c", "copy", p + "output.mp4")
-	_, e := cmd.CombinedOutput()
+	//log.Println(pp)
+	for i := l.Front(); i != nil; i = i.Next() {
+		log.Println("file '" + pp + i.Value.(string) + "'\n")
+		out.WriteString("file '" + pp + i.Value.(string) + "'\n")
+	}
+
+	cmd := exec.Command("ffmpeg", "-f", "concat", "-safe", "0", "-i", pp + "file", "-c", "copy", p + "output.mp4")
+	o, e := cmd.CombinedOutput()
 	if e != nil {
-		log.Println(e)
+		log.Println("cmdout:"+string(o)+"error:"+e.Error())
 	}
 	//log.Println(string(o))
 }
