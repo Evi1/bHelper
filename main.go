@@ -22,7 +22,7 @@ func init() {
 }
 
 func main() {
-	bPath := config.C.From + "tv.danmaku.bili/download/"
+	bPath := config.C.From + "download/"
 	cPath := bPath
 	files, _ := ioutil.ReadDir(cPath)
 	l1 := list.New()
