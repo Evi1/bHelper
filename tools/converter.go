@@ -25,7 +25,7 @@ func CheckFLV(videos []os.FileInfo) (l *list.List, r bool) {
 	r = false;
 	l = list.New(); ll := list.New()
 	for _, video := range videos {
-		if strings.HasSuffix(video.Name(), ".flv") {
+		if strings.HasSuffix(video.Name(), ".flv")|| strings.HasSuffix(video.Name(), ".blv"){
 			r = true;
 			ll.PushBack(video.Name())
 		}

@@ -15,19 +15,23 @@ import (
 
 var routineNum chan int
 var routineLimit chan int
-
+var buf []byte
 func init() {
 	routineNum = make(chan int)
 	routineLimit = make(chan int, config.C.Limit)
 }
 
 func main() {
+	if(config.C.Buf>0){
+		buf = make([]byte, config.C.Buf)
+	}
 	bPath := config.C.From + "download/"
 	cPath := bPath
 	files, _ := ioutil.ReadDir(cPath)
 	l1 := list.New()
 	for _, f := range files {
 		if f.IsDir() {
+			log.Println(f.Name())
 			l1.PushBack(f)
 		}
 	}
@@ -42,6 +46,7 @@ func main() {
 			if f.IsDir() {
 				num++
 				routineLimit <- 1
+				log.Println(cPath,f.Name())
 				go handle(cPath, f)
 			}
 		}
@@ -64,6 +69,7 @@ func handle(cPath string, f os.FileInfo) {
 			videos, _ := ioutil.ReadDir(path + f.Name() + "/")
 			l, r := tools.CheckFLV(videos)
 			if r {
+				log.Println(path+f.Name()+"FLV")
 				tools.MakeMp4(l, path + f.Name() + "/")
 				videos, _ = ioutil.ReadDir(path + f.Name() + "/")
 			}
@@ -174,7 +180,8 @@ func copyVideo(title, part, path, inPath, v, thisTitle string) {
 			return
 		}
 		defer out.Close()
-		buf := make([]byte, config.C.Buf) //一次读取多少个字节
+		//buf := make([]byte, config.C.Buf) //一次读取多少个字节
+
 		bfRd := bufio.NewReader(in)
 		outputWriter := bufio.NewWriter(out)
 		for {
