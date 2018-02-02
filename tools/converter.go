@@ -23,9 +23,10 @@ func findMin(l *list.List) *list.Element {
 
 func CheckFLV(videos []os.FileInfo) (l *list.List, r bool) {
 	r = false;
-	l = list.New(); ll := list.New()
+	l = list.New();
+	ll := list.New()
 	for _, video := range videos {
-		if strings.HasSuffix(video.Name(), ".flv")|| strings.HasSuffix(video.Name(), ".blv"){
+		if strings.HasSuffix(video.Name(), ".flv") || strings.HasSuffix(video.Name(), ".blv") {
 			r = true;
 			ll.PushBack(video.Name())
 		}
@@ -38,28 +39,27 @@ func CheckFLV(videos []os.FileInfo) (l *list.List, r bool) {
 	return
 }
 
-func MakeMp4(l *list.List, p string) {
-	out, err := os.OpenFile(p + "file", os.O_WRONLY | os.O_CREATE, 0666)
+func MakeMp4(l *list.List, p string, t string) {
+	out, err := os.OpenFile(p+"file", os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		log.Println("An error occurred with file opening or creation:" + p + "file")
 		return
 	}
 	defer out.Close()
-	pp:=p
-	if runtime.GOOS=="windows"{
+	if runtime.GOOS == "windows" {
 		//log.Println(runtime.GOOS)
-		pp=filepath.FromSlash(p)
+		p = filepath.FromSlash(p)
 	}
-	//log.Println(pp)
+	//log.Println(p)
 	for i := l.Front(); i != nil; i = i.Next() {
-		log.Println("file '" + pp + i.Value.(string) + "'\n")
-		out.WriteString("file '" + pp + i.Value.(string) + "'\n")
+		log.Println("file '" + p + i.Value.(string) + "'\n")
+		out.WriteString("file '" + p + i.Value.(string) + "'\n")
 	}
-
-	cmd := exec.Command("ffmpeg", "-f", "concat", "-safe", "0", "-i", pp + "file", "-c", "copy", p + "output.mp4")
+	log.Println(p + "file" + "  ------>  " + t)
+	cmd := exec.Command("ffmpeg", "-f", "concat", "-safe", "0", "-i", p+"file", "-c", "copy", t /*p + "output.mp4"*/)
 	o, e := cmd.CombinedOutput()
 	if e != nil {
-		log.Println("cmdout:"+string(o)+"error:"+e.Error())
+		log.Println("cmdout:" + string(o) + "error:" + e.Error())
 	}
 	//log.Println(string(o))
 }
@@ -69,7 +69,7 @@ func getNum(n string) (x int) {
 	m := strings.Split(n, ".")[0]
 	x, e = strconv.Atoi(m)
 	if e != nil {
-		x=-1
+		x = -1
 		log.Println("An error occurred with vlc file name:" + n + " : " + e.Error())
 	}
 	return

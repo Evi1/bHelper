@@ -15,7 +15,6 @@ import (
 
 var routineNum chan int
 var routineLimit chan int
-var buf []byte
 
 func init() {
 	routineNum = make(chan int)
@@ -23,9 +22,6 @@ func init() {
 }
 
 func main() {
-	if (config.C.Buf > 0) {
-		buf = make([]byte, config.C.Buf)
-	}
 	bPath := config.C.From + "download/"
 	cPath := bPath
 	files, _ := ioutil.ReadDir(cPath)
@@ -58,6 +54,10 @@ func main() {
 }
 
 func handle(cPath string, f os.FileInfo) {
+	defer func() {
+		<-routineLimit
+		routineNum <- 1
+	}()
 	path := cPath + f.Name() + "/"
 	files, _ := ioutil.ReadDir(path)
 	title := "";
@@ -65,50 +65,66 @@ func handle(cPath string, f os.FileInfo) {
 	v := "";
 	thisTitle := "";
 	inPath := ""
-	isV := false;
-	isM := false
+	gotMp4 := false
+	gotConfig := false
+	gotXlv := false
+	var xlvs *list.List
 	for _, f := range files {
-		if isV && isM {
-			break;
+		if (gotMp4 || gotXlv) && gotConfig {
+			break
 		}
 		if f.IsDir() {
 			videos, _ := ioutil.ReadDir(path + f.Name() + "/")
 			l, r := tools.CheckFLV(videos)
 			if r {
-				log.Println(path + f.Name() + " FLV")
-				tools.MakeMp4(l, path+f.Name()+"/")
-				videos, _ = ioutil.ReadDir(path + f.Name() + "/")
-			}
-
-			for _, video := range videos {
-				if strings.HasSuffix(video.Name(), ".mp4") {
-					v = video.Name()
-					inPath = f.Name() + "/"
-					isV = true
-					break
-				}
+				log.Println(path + f.Name() + " BLV/FLV")
+				inPath = f.Name() + "/"
+				gotXlv = true
+				xlvs = l
 			}
 		} else if strings.HasSuffix(f.Name(), ".json") {
 			var e error
 			title, part, thisTitle, e = handleJSON(path + f.Name())
 			if e != nil {
 				log.Println("An error occurred with json file:" + f.Name() + " : " + e.Error())
-				<-routineLimit
-				routineNum <- 1
+				//<-routineLimit
+				//routineNum <- 1
 				return
 			}
-			isM = true;
+			gotConfig = true;
 		} else if strings.HasSuffix(f.Name(), ".mp4") {
 			v = f.Name()
 			inPath = ""
-			isV = true
+			gotMp4 = true
 		}
 	}
-	if isV && isM {
-		copyVideo(title, part, path, inPath, v, thisTitle)
+	inputFile := path + inPath + v;
+	part = strings.TrimSpace(part)
+	if len(part) <= 1 {
+		part = "0" + part
 	}
-	<-routineLimit
-	routineNum <- 1
+	outputFile := ""
+	if len(thisTitle) > 0 {
+		outputFile = config.C.To + title + "/" + part + "-" + thisTitle + ".mp4"
+	} else {
+		outputFile = config.C.To + title + "/" + part + ".mp4"
+	}
+	if _, err := os.Stat(outputFile); err == nil {
+		// path/to/whatever exists
+		log.Println(outputFile + " file done !")
+		return
+	}
+	err := os.MkdirAll(config.C.To+title+"/", os.ModePerm)
+	if err != nil {
+		log.Println("mkdir error" + config.C.To + title + "/")
+		return
+	}
+	if gotMp4 && gotConfig {
+		copyVideo(inputFile,outputFile)
+	} else if gotXlv && gotConfig {
+		tools.MakeMp4(xlvs, path+inPath, outputFile)
+	}
+
 }
 
 func handleJSON(filename string) (title, part, thisTitle string, e error) {
@@ -127,66 +143,43 @@ func handleJSON(filename string) (title, part, thisTitle string, e error) {
 		return
 	}
 	title = js.Get("title").MustString("")
-	title = strings.Replace(title,"\\","",-1)
-	title = strings.Replace(title,"/","",-1)
-	title = strings.Replace(title,":","",-1)
-	title = strings.Replace(title,"?","",-1)
-	title = strings.Replace(title,"*","",-1)
-	title = strings.Replace(title,"\"","",-1)
-	title = strings.Replace(title,"<","",-1)
-	title = strings.Replace(title,">","",-1)
-	title = strings.Replace(title,"|","",-1)
+	title = strings.Replace(title, "\\", "", -1)
+	title = strings.Replace(title, "/", "", -1)
+	title = strings.Replace(title, ":", "", -1)
+	title = strings.Replace(title, "?", "", -1)
+	title = strings.Replace(title, "*", "", -1)
+	title = strings.Replace(title, "\"", "", -1)
+	title = strings.Replace(title, "<", "", -1)
+	title = strings.Replace(title, ">", "", -1)
+	title = strings.Replace(title, "|", "", -1)
 	part = js.Get("page_data").Get("part").MustString("")
 	if part == "" {
 		part = js.Get("ep").Get("index").MustString("")
 		thisTitle = js.Get("ep").Get("index_title").MustString("")
-		thisTitle = strings.Replace(thisTitle,"\\","",-1)
-		thisTitle = strings.Replace(thisTitle,"/","",-1)
-		thisTitle = strings.Replace(thisTitle,":","",-1)
-		thisTitle = strings.Replace(thisTitle,"?","",-1)
-		thisTitle = strings.Replace(thisTitle,"*","",-1)
-		thisTitle = strings.Replace(thisTitle,"\"","",-1)
-		thisTitle = strings.Replace(thisTitle,"<","",-1)
-		thisTitle = strings.Replace(thisTitle,">","",-1)
-		thisTitle = strings.Replace(thisTitle,"|","",-1)
+		thisTitle = strings.Replace(thisTitle, "\\", "", -1)
+		thisTitle = strings.Replace(thisTitle, "/", "", -1)
+		thisTitle = strings.Replace(thisTitle, ":", "", -1)
+		thisTitle = strings.Replace(thisTitle, "?", "", -1)
+		thisTitle = strings.Replace(thisTitle, "*", "", -1)
+		thisTitle = strings.Replace(thisTitle, "\"", "", -1)
+		thisTitle = strings.Replace(thisTitle, "<", "", -1)
+		thisTitle = strings.Replace(thisTitle, ">", "", -1)
+		thisTitle = strings.Replace(thisTitle, "|", "", -1)
 	}
 	return
 }
 
-func copyVideo(title, part, path, inPath, v, thisTitle string) {
-	inputFile := path + inPath + v;
-	part = strings.TrimSpace(part)
-	if len(part) <= 1 {
-		part = "0" + part
-	}
-	outputFile := ""
-	if len(thisTitle) > 0 {
-		outputFile = config.C.To + title + "/" + part + "-" + thisTitle + ".mp4"
-	} else {
-		outputFile = config.C.To + title + "/" + part + ".mp4"
-	}
-	if _, err := os.Stat(outputFile); err == nil {
-		// path/to/whatever exists
-		log.Println(outputFile + " file exitsts !")
-		return
-	}
-	//oldMask := syscall.Umask(0)
-	err := os.MkdirAll(config.C.To+title+"/", os.ModePerm)
-	if err != nil {
-		log.Println("mkdir error" + config.C.To + title + "/")
-		return
-	}
-	//syscall.Umask(oldMask)
+func copyVideo(inputFile, outputFile string) {
 	log.Println(inputFile + "  ------>  " + outputFile)
 	if config.C.Buf <= 0 {
 		buf, err := ioutil.ReadFile(inputFile)
 		if err != nil {
-			log.Println("An error occurred with read:" + v)
+			log.Println("An error occurred with read:" + inputFile)
 			return
 		}
 		out, err := os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
-			log.Println("An error occurred with file opening or creation:" + part + ".mp4")
+			log.Println("An error occurred with file opening or creation:" + outputFile)
 			return
 		}
 		defer out.Close()
@@ -196,18 +189,17 @@ func copyVideo(title, part, path, inPath, v, thisTitle string) {
 	} else {
 		in, err := os.OpenFile(inputFile, os.O_RDONLY, 0666)
 		if err != nil {
-			log.Println("An error occurred with file opening:" + part + ".mp4")
+			log.Println("An error occurred with file opening:" + outputFile)
 			return
 		}
 		defer in.Close()
 		out, err := os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
-			log.Println("An error occurred with file opening or creation:" + part + ".mp4")
+			log.Println("An error occurred with file opening or creation:" + outputFile)
 			return
 		}
 		defer out.Close()
-		//buf := make([]byte, config.C.Buf) //一次读取多少个字节
-
+		buf := make([]byte, config.C.Buf) //一次读取多少个字节
 		bfRd := bufio.NewReader(in)
 		outputWriter := bufio.NewWriter(out)
 		for {
