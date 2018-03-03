@@ -40,6 +40,7 @@ func CheckFLV(videos []os.FileInfo) (l *list.List, r bool) {
 }
 
 func MakeMp4(l *list.List, p string, t string) {
+	os.Remove(p+"file")
 	out, err := os.OpenFile(p+"file", os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		log.Println("An error occurred with file opening or creation:" + p + "file")
